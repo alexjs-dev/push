@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Document</title>
+  </head>
+  <body>
+    <input id="name" placeholder="Name" />
+    <button onclick="subscribe()">Subscribe</button>
+
+    <script>
+      async function subscribe() {
+        const name = document.getElementById("name").value;
+        if (!name || (name && name.trim().length === 0)) {
+          alert("Please enter your name");
+          return;
+        }
+        let sw = await navigator.serviceWorker.ready;
+        let push = await sw.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey:
+            "BAEoJOUQgFKyJM2jwI580zjkTlkboAiyXc7mwmuciLbT1RuiiGIBF4DnRQD2moY_NGJyeQ9vGc9dvAGxyBXKoAw",
+        });
+        console.log(JSON.stringify(push));
+
+        fetch("/subscribe", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name,
+            ...JSON.parse(JSON.stringify(push)),
+          }),
+        })
+          .then((response) => {
+            console.log(response);
+            alert("Subscribed");
+          })
+          .catch((err) => {
+            console.log(err);
+            alert("Error");
+          });
+      }
+
+      if ("serviceWorker" in navigator) {
+        addEventListener("load", async () => {
+          let sw = await navigator.serviceWorker.register("./sw.js");
+          console.log("sw", sw);
+        });
+      }
+    </script>
+  </body>
+</html>
